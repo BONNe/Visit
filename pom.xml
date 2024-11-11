@@ -33,25 +33,21 @@
     </issueManagement>
 
     <distributionManagement>
-        <snapshotRepository>
-            <id>codemc-snapshots</id>
-            <url>https://repo.codemc.io/repository/maven-snapshots</url>
-        </snapshotRepository>
         <repository>
-            <id>codemc-releases</id>
-            <url>https://repo.codemc.io/repository/maven-releases</url>
+            <id>bentoboxworld</id>
+            <url>https://repo.codemc.io/repository/bentoboxworld/</url>
         </repository>
     </distributionManagement>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>16</java.version>
+        <java.version>17</java.version>
         <powermock.version>1.7.4</powermock.version>
         <!-- More visible way how to change dependency versions -->
-        <spigot.version>1.20.4-R0.1-SNAPSHOT</spigot.version>
+        <spigot.version>1.21.3-R0.1-SNAPSHOT</spigot.version>
         <!-- BentoBox API version -->
-        <bentobox.version>2.0.0-SNAPSHOT</bentobox.version>
+        <bentobox.version>2.7.1-SNAPSHOT</bentobox.version>
         <bank.version>1.4.0</bank.version>
         <vault.version>1.7</vault.version>
         <!-- Panel Utils version -->
@@ -246,15 +242,20 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.0.1</version>
+                <version>3.4.1</version>
                 <configuration>
-                    <show>public</show>
+                    <source>${java.version}</source>
+                    <show>private</show>
+                    <quiet>true</quiet>
                     <failOnError>false</failOnError>
                     <additionalJOption>-Xdoclint:none</additionalJOption>
+                    <!-- To compile with Java 11, this tag may be required -->
+                    <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
                 </configuration>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
+                        <phase>package</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
@@ -282,25 +283,37 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.4.1</version>
+                <version>3.4.0</version>
                 <configuration>
                     <minimizeJar>true</minimizeJar>
+                    <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
+                    <relocations>
+                        <relocation>
+                            <pattern>org.bstats</pattern>
+                            <shadedPattern>world.bentobox.bentobox.util.metrics</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>io.github.TheBusyBiscuit.GitHubWebAPI4Java</pattern>
+                            <shadedPattern>world.bentobox.bentobox.api.github</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>io.papermc.lib</pattern>
+                            <shadedPattern>world.bentobox.bentobox.paperlib</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>com.github.puregero.multilib</pattern>
+                            <shadedPattern>world.bentobox.bentobox.multilib</shadedPattern>
+                        </relocation>
+                        </relocations>
                     <artifactSet>
-                        <includes>
-                            <include>lv.id.bonne:panelutils:*</include>
-                        </includes>
+                        <excludes>
+                            <exclude>org.apache.maven.shared:*</exclude>
+                            <exclude>org.apache.maven:*</exclude>
+                            <exclude>com.google.code.gson:*</exclude>
+                            <exclude>org.mongodb:*</exclude>
+                            <exclude>org.eclipse.jdt:*</exclude>
+                        </excludes>
                     </artifactSet>
-                    <transformers>
-                        <!-- Add a transformer to exclude any other manifest files (possibly from dependencies). -->
-                        <transformer implementation="org.apache.maven.plugins.shade.resource.DontIncludeResourceTransformer">
-                            <resource>MANIFEST.MF</resource>
-                        </transformer>
-                        <!-- Add a transformer to include your custom manifest file. -->
-                        <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
-                            <resource>META-INF/MANIFEST.MF</resource>
-                            <file>src/main/resources/META-INF/MANIFEST.MF</file>
-                        </transformer>
-                    </transformers>
                 </configuration>
                 <executions>
                     <execution>
